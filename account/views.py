@@ -73,29 +73,27 @@ def updata_user(request):
     return Response(serializer.data)
 
 def get_current_host(request):
-    protocol=request.is_secure()and'https'or'http'
-    host=request.get_host()
-    return '{protocol}://{host}/'.format(protocol,host=host)
-
-
+    protocol = 'https' if request.is_secure() else 'http'
+    host = request.get_host()
+    return '{protocol}://{host}/'.format(protocol=protocol, host=host)
 
 @api_view(['POST'])
 def forgot_password(request):
-    data=request.data
-    user=get_object_or_404(User, email=data['email'])
-    token=get_random_string(40)
-    exprire_data=datetime.now()+timedelta(minutes=40)
-    user.profile.reset_password_token=token
-    user.profile.reset_password_expire=exprire_data
+    data = request.data
+    user = get_object_or_404(User, email=data['email'])
+    token = get_random_string(40)
+    expire_date = datetime.now() + timedelta(minutes=40)
+    user.profile.reset_password_token = token
+    user.profile.reset_password_expire = expire_date
     user.profile.save()
 
-    host=get_current_host(request)
-    link='http://localhost:8000/api/reset_password/token'
-    body='your password reset kink id:{link}'.format(link=link)
+    host = get_current_host(request)
+    link = '{host}api/reset_password/{token}'.format(host=host, token=token)
+    body = 'Your password reset link is: {link}'.format(link=link)
     send_mail(
-        'password reset from test ',
+        'Password reset from Test',
         body,
-        'Market@gmial.com',
+        'Market@gmail.com',
         [data['email']]
     )
-    return Response({'details':'password reset sent to {email}'.format(email=data['email'])})
+    return Response({'details': 'Password reset link sent to {email}'.format(email=data['email'])})
